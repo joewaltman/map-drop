@@ -211,6 +211,8 @@ export const continentConfig = {
   europe: {
     name: 'Europe',
     rotateLng: -15,
+    // Manual bounding box to crop out Iceland/Cyprus extremes for a tighter zoom
+    fitBounds: [[-12, 34], [40, 60]],
   },
   africa: {
     name: 'Africa',

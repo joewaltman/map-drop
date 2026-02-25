@@ -47,11 +47,28 @@ export default function ContinentMap({
   // 2. fitExtent auto-computes scale + translate to frame the continent
   const { projection, pathGen, graticule } = useMemo(() => {
     const proj = geoNaturalEarth1()
-      .rotate([config.rotateLng, 0, 0])
-      .fitExtent(
+      .rotate([config.rotateLng, 0, 0]);
+
+    if (config.fitBounds) {
+      // Use manual bounding box for tighter crop (e.g., Europe)
+      const [[west, south], [east, north]] = config.fitBounds;
+      const boundsGeoJSON = {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[[west, south], [east, south], [east, north], [west, north], [west, south]]],
+        },
+      };
+      proj.fitExtent(
+        [[PADDING, PADDING], [MAP_WIDTH - PADDING, MAP_HEIGHT - PADDING]],
+        boundsGeoJSON
+      );
+    } else {
+      proj.fitExtent(
         [[PADDING, PADDING], [MAP_WIDTH - PADDING, MAP_HEIGHT - PADDING]],
         continentGeoJSON
       );
+    }
 
     return {
       projection: proj,
