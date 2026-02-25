@@ -215,7 +215,7 @@ export const continentConfig = {
     // and Norway includes Svalbard, stretching the bounding box far beyond Europe.
     // These values frame continental Europe + UK at MAP_WIDTH=800, MAP_HEIGHT=500.
     manualScale: 900,
-    manualCenter: [0, 5],  // [lng, lat] offset in rotated coords — centers on ~50°N
+    manualCenter: [0, 50],  // [lng, lat] in rotated coords — 50°N = central Europe
   },
   africa: {
     name: 'Africa',
