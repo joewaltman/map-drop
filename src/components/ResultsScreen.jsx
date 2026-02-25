@@ -104,7 +104,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     const timeStr = result.elapsedMs ? ` ⏱ ${formatTime(result.elapsedMs)}` : '';
     const streakLine = streakData.currentStreak >= 2 ? `\n🔥 ${streakData.currentStreak}-day streak` : '';
 
-    const quote = `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}`;
+    const quote = `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\nmapdrop.io`;
     const shareUrl = 'https://mapdrop.io';
 
     window.open(
