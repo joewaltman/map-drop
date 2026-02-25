@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
-import { toPng } from 'html-to-image';
+import { useState, useEffect } from 'react';
 import {
   ComposableMap,
   Geographies,
@@ -12,8 +11,7 @@ import { countryToContinent, continentConfig } from '../data/continentMapping';
 import { distanceToColor, distanceToEmoji, formatDistance, formatTime } from '../utils/scoring';
 import { getDayNumber } from '../utils/dailySeed';
 import { getStreakData } from '../utils/storage';
-import { playComplete, playTick } from '../utils/sound';
-import ShareCard from './ShareCard';
+import { playComplete } from '../utils/sound';
 import StatsModal from './StatsModal';
 
 const CONTINENT_KEYS = ['northAmerica', 'southAmerica', 'europe', 'africa', 'asia'];
@@ -22,12 +20,10 @@ const COUNT_DURATION = 1000; // ms for count-up animation
 
 export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
   const [copied, setCopied] = useState(false);
-  const [fbShareStatus, setFbShareStatus] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [displayedTotal, setDisplayedTotal] = useState(0);
   const [totalRevealed, setTotalRevealed] = useState(false);
   const [challengeCopied, setChallengeCopied] = useState(false);
-  const shareCardRef = useRef(null);
   const dayNumber = getDayNumber();
   const streakData = getStreakData();
 
@@ -98,63 +94,24 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     }
   };
 
-  const handleFacebookShare = async () => {
-    if (!shareCardRef.current) return;
+  const handleFacebookShare = () => {
+    const lines = result.guesses.map((g) => {
+      const emoji = distanceToEmoji(g.distanceKm, g.continent);
+      const name = (continentConfig[g.continent]?.name || g.continent).padEnd(12);
+      return `${emoji} ${name} ${formatDistance(g.distanceKm)} km`;
+    });
 
-    try {
-      setFbShareStatus('generating');
-      const dataUrl = await toPng(shareCardRef.current, {
-        width: 1200,
-        height: 630,
-        pixelRatio: 1,
-      });
+    const timeStr = result.elapsedMs ? ` ⏱ ${formatTime(result.elapsedMs)}` : '';
+    const streakLine = streakData.currentStreak >= 2 ? `\n🔥 ${streakData.currentStreak}-day streak` : '';
 
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
+    const quote = `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}`;
+    const shareUrl = 'https://mapdrop.io';
 
-      const breakdown = result.guesses
-        .map((g) => {
-          const name = continentConfig[g.continent]?.name || g.continent;
-          return `${name}: ${formatDistance(g.distanceKm)} km`;
-        })
-        .join(' | ');
-
-      setFbShareStatus('uploading');
-      const formData = new FormData();
-      formData.append('image', blob, 'share.png');
-      formData.append('dayNumber', String(dayNumber));
-      formData.append('totalKm', String(result.totalKm));
-      formData.append('elapsedMs', String(result.elapsedMs || 0));
-      formData.append('breakdown', breakdown);
-
-      const uploadRes = await fetch('/api/share', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadRes.ok) throw new Error('Upload failed');
-
-      const { shareUrl } = await uploadRes.json();
-
-      // Pre-warm: fetch the share page so it's ready when Facebook's crawler hits it.
-      // Also gives the server time to pre-scrape with Facebook if FB credentials are configured.
-      setFbShareStatus('uploading');
-      try {
-        await fetch(shareUrl, { mode: 'no-cors' });
-      } catch {
-        // non-fatal
-      }
-
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
-        '_blank',
-        'width=600,height=400'
-      );
-    } catch (err) {
-      console.error('Facebook share failed:', err);
-    } finally {
-      setFbShareStatus(null);
-    }
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(quote)}`,
+      '_blank',
+      'width=600,height=400'
+    );
   };
 
   const handleChallenge = async () => {
@@ -168,13 +125,6 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
       // silent fail
     }
   };
-
-  const fbButtonLabel =
-    fbShareStatus === 'generating'
-      ? 'Generating...'
-      : fbShareStatus === 'uploading'
-        ? 'Uploading...'
-        : 'Share to Facebook';
 
   const isGreatScore = result.totalKm < 1000;
 
@@ -310,12 +260,8 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
         <button className="btn btn-primary" onClick={handleShare}>
           {copied ? 'Copied!' : 'Share'}
         </button>
-        <button
-          className="btn btn-facebook"
-          onClick={handleFacebookShare}
-          disabled={fbShareStatus !== null}
-        >
-          {fbButtonLabel}
+        <button className="btn btn-facebook" onClick={handleFacebookShare}>
+          Share to Facebook
         </button>
         <button className="btn btn-secondary" onClick={handleChallenge}>
           {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
@@ -325,11 +271,6 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
             Play Again
           </button>
         )}
-      </div>
-
-      {/* Off-screen ShareCard for html-to-image capture */}
-      <div className="share-card-container">
-        <ShareCard ref={shareCardRef} result={result} dayNumber={dayNumber} />
       </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
