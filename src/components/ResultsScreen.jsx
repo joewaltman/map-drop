@@ -62,8 +62,9 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     return () => clearTimeout(timer);
   }, [result.totalKm, result.guesses.length]);
 
-  const handleShare = async () => {
-    // Build richer share text with per-continent breakdown
+  const SITE_URL = 'https://map-drop-production.up.railway.app';
+
+  const getShareText = () => {
     const lines = result.guesses.map((g) => {
       const emoji = distanceToEmoji(g.distanceKm, g.continent);
       const name = (continentConfig[g.continent]?.name || g.continent).padEnd(12);
@@ -73,8 +74,11 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     const timeStr = result.elapsedMs ? ` ⏱ ${formatTime(result.elapsedMs)}` : '';
     const streakLine = streakData.currentStreak >= 2 ? `\n🔥 ${streakData.currentStreak}-day streak` : '';
 
-    const text = `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\nmapdrop.io`;
+    return `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\n${SITE_URL}`;
+  };
 
+  const handleShare = async () => {
+    const text = getShareText();
     try {
       if (navigator.share) {
         await navigator.share({ text });
@@ -94,21 +98,21 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     }
   };
 
-  const handleFacebookShare = () => {
-    const lines = result.guesses.map((g) => {
-      const emoji = distanceToEmoji(g.distanceKm, g.continent);
-      const name = (continentConfig[g.continent]?.name || g.continent).padEnd(12);
-      return `${emoji} ${name} ${formatDistance(g.distanceKm)} km`;
-    });
+  const [fbCopied, setFbCopied] = useState(false);
 
-    const timeStr = result.elapsedMs ? ` ⏱ ${formatTime(result.elapsedMs)}` : '';
-    const streakLine = streakData.currentStreak >= 2 ? `\n🔥 ${streakData.currentStreak}-day streak` : '';
-
-    const quote = `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\nmapdrop.io`;
-    const shareUrl = 'https://mapdrop.io';
-
+  const handleFacebookShare = async () => {
+    const text = getShareText();
+    // Copy rich text to clipboard so user can paste into the FB post
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // non-fatal
+    }
+    setFbCopied(true);
+    setTimeout(() => setFbCopied(false), 4000);
+    // Open Facebook post composer
     window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(quote)}`,
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`,
       '_blank',
       'width=600,height=400'
     );
@@ -261,7 +265,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
           {copied ? 'Copied!' : 'Share'}
         </button>
         <button className="btn btn-facebook" onClick={handleFacebookShare}>
-          Share to Facebook
+          {fbCopied ? 'Copied! Paste into your post' : 'Share to Facebook'}
         </button>
         <button className="btn btn-secondary" onClick={handleChallenge}>
           {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
