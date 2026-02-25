@@ -18,7 +18,7 @@ export default function Landing({ onPlay }) {
   return (
     <div className="landing fade-in">
       <div className="landing-header">
-        <h1 className="landing-title">MapDrop</h1>
+        <h1 className="landing-title">DailyPin</h1>
         <span className="landing-day">#{dayNumber}</span>
         {stats && (
           <button className="btn-icon" onClick={() => setShowStats(true)} title="Statistics">

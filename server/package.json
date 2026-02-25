@@ -1,5 +1,5 @@
 {
-  "name": "mapdrop-server",
+  "name": "dailypin-server",
   "private": true,
   "type": "module",
   "dependencies": {

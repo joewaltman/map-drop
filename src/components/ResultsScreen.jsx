@@ -62,7 +62,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     return () => clearTimeout(timer);
   }, [result.totalKm, result.guesses.length]);
 
-  const SITE_URL = 'https://map-drop-production.up.railway.app';
+  const SITE_URL = 'https://dailypin.net';
 
   const getShareText = () => {
     const lines = result.guesses.map((g) => {
@@ -74,7 +74,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     const timeStr = result.elapsedMs ? ` ⏱ ${formatTime(result.elapsedMs)}` : '';
     const streakLine = streakData.currentStreak >= 2 ? `\n🔥 ${streakData.currentStreak}-day streak` : '';
 
-    return `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\n${SITE_URL}`;
+    return `🌍 DailyPin #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\n${SITE_URL}`;
   };
 
   const handleShare = async () => {
@@ -118,6 +118,15 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     );
   };
 
+  const handleTwitterShare = () => {
+    const text = getShareText();
+    window.open(
+      `https://x.com/intent/post?text=${encodeURIComponent(text)}`,
+      '_blank',
+      'width=600,height=400'
+    );
+  };
+
   const handleChallenge = async () => {
     const params = `${dayNumber}_${result.totalKm}_${result.elapsedMs || 0}`;
     const url = `${window.location.origin}${window.location.pathname}?challenge=${params}`;
@@ -135,7 +144,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
   return (
     <div className="results-screen fade-in">
       <div className="results-header-bar">
-        <h1 className="results-title">MapDrop #{dayNumber}</h1>
+        <h1 className="results-title">DailyPin #{dayNumber}</h1>
         <button className="btn-icon" onClick={() => setShowStats(true)} title="Statistics">
           📊
         </button>
@@ -263,6 +272,9 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
       <div className="results-actions">
         <button className="btn btn-primary" onClick={handleShare}>
           {copied ? 'Copied!' : 'Share'}
+        </button>
+        <button className="btn btn-twitter" onClick={handleTwitterShare}>
+          Share to X
         </button>
         <button className="btn btn-facebook" onClick={handleFacebookShare}>
           {fbCopied ? 'Copied! Paste into your post' : 'Share to Facebook'}

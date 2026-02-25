@@ -1,4 +1,4 @@
-const MUTE_KEY = 'mapdrop-muted';
+const MUTE_KEY = 'dailypin-muted';
 
 let audioCtx = null;
 

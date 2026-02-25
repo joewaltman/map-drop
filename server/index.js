@@ -125,8 +125,8 @@ app.get('/share/:id', (req, res) => {
   const baseUrl = getBaseUrl(req);
   const meta = JSON.parse(readFileSync(metaPath, 'utf-8'));
   const imageUrl = `${baseUrl}/api/images/${id}.png`;
-  const title = `MapDrop #${meta.dayNumber} — ${Number(meta.totalKm).toLocaleString('en-US')} km`;
-  const description = meta.breakdown || 'How well do you know the world? Play MapDrop daily!';
+  const title = `DailyPin #${meta.dayNumber} — ${Number(meta.totalKm).toLocaleString('en-US')} km`;
+  const description = meta.breakdown || 'How well do you know the world? Play DailyPin daily!';
 
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Cache-Control', 'no-cache');
@@ -160,8 +160,8 @@ app.get('/share/:id', (req, res) => {
 <body>
   <div class="container">
     <h1>${escapeHtml(title)}</h1>
-    <p>Redirecting to MapDrop...</p>
-    <img src="${imageUrl}" alt="MapDrop Results">
+    <p>Redirecting to DailyPin...</p>
+    <img src="${imageUrl}" alt="DailyPin Results">
   </div>
 </body>
 </html>`);
@@ -239,5 +239,5 @@ setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
 
 app.listen(PORT, () => {
   const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-  console.log(`MapDrop server running at ${baseUrl}`);
+  console.log(`DailyPin server running at ${baseUrl}`);
 });

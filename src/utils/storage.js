@@ -1,4 +1,15 @@
-const STORAGE_KEY = 'mapdrop';
+const STORAGE_KEY = 'dailypin';
+
+// Migrate data from old key if present
+try {
+  const old = localStorage.getItem('mapdrop');
+  if (old && !localStorage.getItem(STORAGE_KEY)) {
+    localStorage.setItem(STORAGE_KEY, old);
+    localStorage.removeItem('mapdrop');
+  }
+} catch {
+  // silent fail
+}
 
 export function getTodayKey() {
   const now = new Date();

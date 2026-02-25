@@ -48,6 +48,15 @@
   color: var(--text-secondary);
 }
 
+.btn-twitter {
+  background: #000;
+  color: #fff;
+}
+
+.btn-twitter:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
 .btn-facebook {
   background: #1877F2;
   color: #fff;
