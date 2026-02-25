@@ -136,6 +136,15 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
 
       const { shareUrl } = await uploadRes.json();
 
+      // Pre-warm: fetch the share page so it's ready when Facebook's crawler hits it.
+      // Also gives the server time to pre-scrape with Facebook if FB credentials are configured.
+      setFbShareStatus('uploading');
+      try {
+        await fetch(shareUrl, { mode: 'no-cors' });
+      } catch {
+        // non-fatal
+      }
+
       window.open(
         `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
         '_blank',

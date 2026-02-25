@@ -7,7 +7,6 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 const PORT = process.env.PORT || 3001;
 
 const UPLOADS_DIR = join(__dirname, 'uploads');
@@ -43,7 +42,7 @@ function getBaseUrl(req) {
 }
 
 // POST /api/share — accept PNG + metadata, return share URL
-app.post('/api/share', upload.single('image'), (req, res) => {
+app.post('/api/share', upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image uploaded' });
   }
@@ -61,6 +60,23 @@ app.post('/api/share', upload.single('image'), (req, res) => {
 
   const baseUrl = getBaseUrl(req);
   const shareUrl = `${baseUrl}/share/${id}`;
+
+  // Pre-scrape: tell Facebook to crawl the share page now so the OG image
+  // is cached before the user opens the share dialog.
+  if (process.env.FB_APP_ID && process.env.FB_APP_SECRET) {
+    try {
+      const token = `${process.env.FB_APP_ID}|${process.env.FB_APP_SECRET}`;
+      const fbRes = await fetch(
+        `https://graph.facebook.com/v19.0/?id=${encodeURIComponent(shareUrl)}&scrape=true&access_token=${token}`,
+        { method: 'POST' }
+      );
+      const fbData = await fbRes.json();
+      console.log('Facebook pre-scrape:', fbData.id ? 'success' : fbData);
+    } catch (err) {
+      console.error('Facebook pre-scrape failed:', err.message);
+    }
+  }
+
   res.json({ shareUrl });
 });
 
@@ -80,9 +96,11 @@ app.get('/share/:id', (req, res) => {
   const title = `MapDrop #${meta.dayNumber} — ${Number(meta.totalKm).toLocaleString('en-US')} km`;
   const description = meta.breakdown || 'How well do you know the world? Play MapDrop daily!';
 
+  // No-cache so Facebook always gets fresh OG tags
   res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Cache-Control', 'no-cache');
   res.send(`<!DOCTYPE html>
-<html>
+<html prefix="og: http://ogp.me/ns#">
 <head>
   <meta charset="utf-8">
   <meta property="og:type" content="website">
@@ -126,6 +144,7 @@ app.get('/api/images/:filename', (req, res) => {
   }
   res.setHeader('Content-Type', 'image/png');
   res.setHeader('Cache-Control', 'public, max-age=604800');
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.sendFile(filePath);
 });
 
@@ -178,5 +197,9 @@ cleanupOldFiles();
 setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`MapDrop server running at ${BASE_URL}`);
+  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+  console.log(`MapDrop server running at ${baseUrl}`);
+  if (!process.env.FB_APP_ID) {
+    console.log('Note: Set FB_APP_ID and FB_APP_SECRET env vars to enable Facebook pre-scraping');
+  }
 });

@@ -211,8 +211,12 @@ export const continentConfig = {
   europe: {
     name: 'Europe',
     rotateLng: -15,
-    // Manual bounding box to crop out Iceland/Cyprus extremes for a tighter zoom
-    fitBounds: [[-12, 34], [40, 60]],
+    // Exclude outlier countries from fitExtent so the zoom is tighter on core Europe.
+    // These countries are still rendered; they just don't influence the zoom level.
+    fitExclude: [
+      '352', // Iceland
+      '196', // Cyprus
+    ],
   },
   africa: {
     name: 'Africa',
