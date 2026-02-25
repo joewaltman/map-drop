@@ -150,6 +150,61 @@
   margin: 4px 0;
 }
 
+.landing-how-to-play {
+  max-width: 380px;
+  width: 100%;
+}
+
+.how-to-play-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+}
+
+.how-to-play-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-color, #3b82f6);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-top: 3px;
+}
+
+.how-to-play-sub {
+  margin: 14px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  opacity: 0.7;
+  text-align: center;
+}
+
 .landing-stats {
   display: flex;
   gap: 32px;

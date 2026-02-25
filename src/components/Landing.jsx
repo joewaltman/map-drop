@@ -7,6 +7,7 @@ export default function Landing({ onPlay }) {
   const [showStats, setShowStats] = useState(false);
   const dayNumber = getDayNumber();
   const stats = getStats();
+  const isNewPlayer = !stats;
   const streakData = getStreakData();
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -29,14 +30,32 @@ export default function Landing({ onPlay }) {
 
       <p className="landing-date">{today}</p>
 
-      <div className="landing-about">
-        <p>
-          5 rounds. 5 continents. Guess the city on a blank map.
-        </p>
-        <p>
-          Your score is the total distance in km — lower is better, like golf.
-        </p>
-      </div>
+      {isNewPlayer ? (
+        <div className="landing-how-to-play">
+          <h2 className="how-to-play-title">How to Play</h2>
+          <div className="how-to-play-steps">
+            <div className="step">
+              <span className="step-number">1</span>
+              <p>You'll see a city name and a blank map of its continent</p>
+            </div>
+            <div className="step">
+              <span className="step-number">2</span>
+              <p>Tap where you think the city is located</p>
+            </div>
+            <div className="step">
+              <span className="step-number">3</span>
+              <p>Score is your total distance off — lower is better, like golf</p>
+            </div>
+          </div>
+          <p className="how-to-play-sub">5 rounds across 5 continents. New puzzle every day.</p>
+        </div>
+      ) : (
+        <div className="landing-about">
+          <p>
+            5 rounds. 5 continents. Guess the city on a blank map.
+          </p>
+        </div>
+      )}
 
       {stats && (
         <div className="landing-stats">
