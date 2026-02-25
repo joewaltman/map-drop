@@ -47,7 +47,7 @@ export default function Landing({ onPlay }) {
               <p>Score is your total distance off — lower is better, like golf</p>
             </div>
           </div>
-          <p className="how-to-play-sub">5 rounds across 5 continents. New puzzle every day.</p>
+          <p className="how-to-play-sub">5 rounds across 5 continents. New cities every day.</p>
         </div>
       ) : (
         <div className="landing-about">
