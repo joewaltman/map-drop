@@ -20,26 +20,14 @@ const GRATICULE_STROKE = 'rgba(255,255,255,0.08)';
 // Pre-compute GeoJSON features from topology (once, at module level)
 const countries = feature(topology, topology.objects.countries);
 
-// Pre-compute per-continent FeatureCollections for rendering and for fitExtent.
-// fitFeatures excludes outlier countries (config.fitExclude) so the zoom is tighter,
-// while continentFeatures includes every country for rendering.
+// Pre-compute per-continent FeatureCollections for fitExtent
 const continentFeatures = {};
-const fitFeatures = {};
 for (const key of Object.keys(continentConfig)) {
-  const cfg = continentConfig[key];
-  const allFeats = countries.features.filter(
-    (f) => countryToContinent[f.id] === key
-  );
   continentFeatures[key] = {
     type: 'FeatureCollection',
-    features: allFeats,
-  };
-  const excludeSet = cfg.fitExclude ? new Set(cfg.fitExclude) : null;
-  fitFeatures[key] = {
-    type: 'FeatureCollection',
-    features: excludeSet
-      ? allFeats.filter((f) => !excludeSet.has(f.id))
-      : allFeats,
+    features: countries.features.filter(
+      (f) => countryToContinent[f.id] === key
+    ),
   };
 }
 
@@ -57,22 +45,29 @@ export default function ContinentMap({
   // Build projection and path generator
   // 1. Rotate only lambda (longitude) — keeps north perfectly up
   // 2. fitExtent auto-computes scale + translate to frame the continent
-  const fitGeoJSON = fitFeatures[continentKey];
-
+  //    (unless manualScale is set — used for Europe where overseas territories break fitExtent)
   const { projection, pathGen, graticule } = useMemo(() => {
     const proj = geoNaturalEarth1()
-      .rotate([config.rotateLng, 0, 0])
-      .fitExtent(
+      .rotate([config.rotateLng, 0, 0]);
+
+    if (config.manualScale) {
+      proj
+        .scale(config.manualScale)
+        .center(config.manualCenter || [0, 0])
+        .translate([MAP_WIDTH / 2, MAP_HEIGHT / 2]);
+    } else {
+      proj.fitExtent(
         [[PADDING, PADDING], [MAP_WIDTH - PADDING, MAP_HEIGHT - PADDING]],
-        fitGeoJSON
+        continentGeoJSON
       );
+    }
 
     return {
       projection: proj,
       pathGen: geoPath(proj),
       graticule: geoGraticule()(),
     };
-  }, [config, fitGeoJSON]);
+  }, [config, continentGeoJSON]);
 
   // Render country paths
   const countryPaths = useMemo(() => {

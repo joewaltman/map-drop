@@ -211,12 +211,11 @@ export const continentConfig = {
   europe: {
     name: 'Europe',
     rotateLng: -15,
-    // Exclude outlier countries from fitExtent so the zoom is tighter on core Europe.
-    // These countries are still rendered; they just don't influence the zoom level.
-    fitExclude: [
-      '352', // Iceland
-      '196', // Cyprus
-    ],
+    // Manual projection: fitExtent doesn't work because France includes French Guiana
+    // and Norway includes Svalbard, stretching the bounding box far beyond Europe.
+    // These values frame continental Europe + UK at MAP_WIDTH=800, MAP_HEIGHT=500.
+    manualScale: 900,
+    manualCenter: [0, 5],  // [lng, lat] offset in rotated coords — centers on ~50°N
   },
   africa: {
     name: 'Africa',
