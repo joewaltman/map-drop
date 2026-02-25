@@ -1,6 +1,9 @@
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import { nanoid } from 'nanoid';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
@@ -18,8 +21,34 @@ mkdirSync(UPLOADS_DIR, { recursive: true });
 mkdirSync(META_DIR, { recursive: true });
 
 const app = express();
+
+// Security headers (allow inline scripts for GA, allow GA and Facebook domains)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://www.googletagmanager.com", "https://www.google-analytics.com"],
+      imgSrc: ["'self'", "data:", "https://www.google-analytics.com"],
+      connectSrc: ["'self'", "https://www.google-analytics.com", "https://analytics.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  },
+}));
+
+// Compression
+app.use(compression());
+
+// CORS
 app.use(cors());
+
 app.use(express.json());
+
+// Rate limit for uploads: 10 per 15 minutes per IP
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Too many uploads, try again later' },
+});
 
 // Multer config: 2MB limit, store PNGs in uploads/
 const upload = multer({
@@ -41,8 +70,11 @@ function getBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
+// Health check
+app.get('/health', (req, res) => res.send('ok'));
+
 // POST /api/share — accept PNG + metadata, return share URL
-app.post('/api/share', upload.single('image'), async (req, res) => {
+app.post('/api/share', uploadLimiter, upload.single('image'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image uploaded' });
   }
@@ -96,7 +128,6 @@ app.get('/share/:id', (req, res) => {
   const title = `MapDrop #${meta.dayNumber} — ${Number(meta.totalKm).toLocaleString('en-US')} km`;
   const description = meta.breakdown || 'How well do you know the world? Play MapDrop daily!';
 
-  // No-cache so Facebook always gets fresh OG tags
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Cache-Control', 'no-cache');
   res.send(`<!DOCTYPE html>
@@ -148,9 +179,19 @@ app.get('/api/images/:filename', (req, res) => {
   res.sendFile(filePath);
 });
 
-// Serve Vite's built files
+// Serve Vite's built static assets with long-term caching (files are content-hashed)
+if (existsSync(join(DIST_DIR, 'assets'))) {
+  app.use('/assets', express.static(join(DIST_DIR, 'assets'), {
+    maxAge: '1y',
+    immutable: true,
+  }));
+}
+
+// Serve remaining static files (index.html, favicon, etc.) with short cache
 if (existsSync(DIST_DIR)) {
-  app.use(express.static(DIST_DIR));
+  app.use(express.static(DIST_DIR, {
+    maxAge: '1h',
+  }));
 }
 
 // SPA catch-all (after /share/:id route)
@@ -199,7 +240,4 @@ setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
 app.listen(PORT, () => {
   const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
   console.log(`MapDrop server running at ${baseUrl}`);
-  if (!process.env.FB_APP_ID) {
-    console.log('Note: Set FB_APP_ID and FB_APP_SECRET env vars to enable Facebook pre-scraping');
-  }
 });
