@@ -8,7 +8,7 @@ import {
 } from '@vnedyalk0v/react19-simple-maps';
 import topology from 'world-atlas/countries-110m.json';
 import { countryToContinent, continentConfig } from '../data/continentMapping';
-import { distanceToColor, formatDistance } from '../utils/scoring';
+import { distanceToColor, formatDistance, formatTime } from '../utils/scoring';
 
 const ShareCard = forwardRef(function ShareCard({ result, dayNumber }, ref) {
   // Build lookup: continent key → guess result
@@ -16,6 +16,8 @@ const ShareCard = forwardRef(function ShareCard({ result, dayNumber }, ref) {
   for (const g of result.guesses) {
     guessByContinent[g.continent] = g;
   }
+
+  const timeStr = result.elapsedMs ? `⏱ ${formatTime(result.elapsedMs)}` : '';
 
   return (
     <div
@@ -45,8 +47,15 @@ const ShareCard = forwardRef(function ShareCard({ result, dayNumber }, ref) {
         <div style={{ fontSize: 36, fontWeight: 800, letterSpacing: -1 }}>
           MapDrop #{dayNumber}
         </div>
-        <div style={{ fontSize: 32, fontWeight: 700 }}>
-          {formatDistance(result.totalKm)} km
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          {timeStr && (
+            <div style={{ fontSize: 22, fontWeight: 600, color: '#94a3b8' }}>
+              {timeStr}
+            </div>
+          )}
+          <div style={{ fontSize: 32, fontWeight: 700 }}>
+            {formatDistance(result.totalKm)} km
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toPng } from 'html-to-image';
 import {
   ComposableMap,
@@ -9,17 +9,27 @@ import {
 } from '@vnedyalk0v/react19-simple-maps';
 import topology from 'world-atlas/countries-110m.json';
 import { countryToContinent, continentConfig } from '../data/continentMapping';
-import { distanceToColor, distanceToEmoji, formatDistance } from '../utils/scoring';
+import { distanceToColor, distanceToEmoji, formatDistance, formatTime } from '../utils/scoring';
 import { getDayNumber } from '../utils/dailySeed';
+import { getStreakData } from '../utils/storage';
+import { playComplete, playTick } from '../utils/sound';
 import ShareCard from './ShareCard';
+import StatsModal from './StatsModal';
 
 const CONTINENT_KEYS = ['northAmerica', 'southAmerica', 'europe', 'africa', 'asia'];
+const ROW_DELAY = 200; // ms between each row reveal
+const COUNT_DURATION = 1000; // ms for count-up animation
 
-export default function ResultsScreen({ result, onPlayAgain }) {
+export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
   const [copied, setCopied] = useState(false);
-  const [fbShareStatus, setFbShareStatus] = useState(null); // null | 'generating' | 'uploading'
+  const [fbShareStatus, setFbShareStatus] = useState(null);
+  const [showStats, setShowStats] = useState(false);
+  const [displayedTotal, setDisplayedTotal] = useState(0);
+  const [totalRevealed, setTotalRevealed] = useState(false);
+  const [challengeCopied, setChallengeCopied] = useState(false);
   const shareCardRef = useRef(null);
   const dayNumber = getDayNumber();
+  const streakData = getStreakData();
 
   // Build a lookup: continent key → guess result
   const guessByContinent = {};
@@ -27,9 +37,47 @@ export default function ResultsScreen({ result, onPlayAgain }) {
     guessByContinent[g.continent] = g;
   }
 
+  // Play completion sound and animate total count-up
+  useEffect(() => {
+    playComplete();
+
+    // Start count-up after all rows have revealed
+    const rowsDelay = result.guesses.length * ROW_DELAY + 300;
+
+    const timer = setTimeout(() => {
+      const startTime = Date.now();
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / COUNT_DURATION, 1);
+        // Ease-out curve
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.round(eased * result.totalKm);
+        setDisplayedTotal(value);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setTotalRevealed(true);
+        }
+      };
+      requestAnimationFrame(animate);
+    }, rowsDelay);
+
+    return () => clearTimeout(timer);
+  }, [result.totalKm, result.guesses.length]);
+
   const handleShare = async () => {
-    const emojis = result.guesses.map((g) => distanceToEmoji(g.distanceKm, g.continent)).join('');
-    const text = `\u{1F30D} MapDrop #${dayNumber} \u{2014} ${formatDistance(result.totalKm)} km\n${emojis}\nmapdrop.io`;
+    // Build richer share text with per-continent breakdown
+    const lines = result.guesses.map((g) => {
+      const emoji = distanceToEmoji(g.distanceKm, g.continent);
+      const name = (continentConfig[g.continent]?.name || g.continent).padEnd(12);
+      return `${emoji} ${name} ${formatDistance(g.distanceKm)} km`;
+    });
+
+    const timeStr = result.elapsedMs ? ` ⏱ ${formatTime(result.elapsedMs)}` : '';
+    const streakLine = streakData.currentStreak >= 2 ? `\n🔥 ${streakData.currentStreak}-day streak` : '';
+
+    const text = `🌍 MapDrop #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\nmapdrop.io`;
 
     try {
       if (navigator.share) {
@@ -54,7 +102,6 @@ export default function ResultsScreen({ result, onPlayAgain }) {
     if (!shareCardRef.current) return;
 
     try {
-      // Generate image
       setFbShareStatus('generating');
       const dataUrl = await toPng(shareCardRef.current, {
         width: 1200,
@@ -62,11 +109,9 @@ export default function ResultsScreen({ result, onPlayAgain }) {
         pixelRatio: 1,
       });
 
-      // Convert data URL to blob
       const response = await fetch(dataUrl);
       const blob = await response.blob();
 
-      // Build spoiler-free breakdown for OG description
       const breakdown = result.guesses
         .map((g) => {
           const name = continentConfig[g.continent]?.name || g.continent;
@@ -74,12 +119,12 @@ export default function ResultsScreen({ result, onPlayAgain }) {
         })
         .join(' | ');
 
-      // Upload to server
       setFbShareStatus('uploading');
       const formData = new FormData();
       formData.append('image', blob, 'share.png');
       formData.append('dayNumber', String(dayNumber));
       formData.append('totalKm', String(result.totalKm));
+      formData.append('elapsedMs', String(result.elapsedMs || 0));
       formData.append('breakdown', breakdown);
 
       const uploadRes = await fetch('/api/share', {
@@ -91,7 +136,6 @@ export default function ResultsScreen({ result, onPlayAgain }) {
 
       const { shareUrl } = await uploadRes.json();
 
-      // Open Facebook share dialog
       window.open(
         `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
         '_blank',
@@ -104,6 +148,18 @@ export default function ResultsScreen({ result, onPlayAgain }) {
     }
   };
 
+  const handleChallenge = async () => {
+    const params = `${dayNumber}_${result.totalKm}_${result.elapsedMs || 0}`;
+    const url = `${window.location.origin}${window.location.pathname}?challenge=${params}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setChallengeCopied(true);
+      setTimeout(() => setChallengeCopied(false), 2000);
+    } catch {
+      // silent fail
+    }
+  };
+
   const fbButtonLabel =
     fbShareStatus === 'generating'
       ? 'Generating...'
@@ -111,14 +167,30 @@ export default function ResultsScreen({ result, onPlayAgain }) {
         ? 'Uploading...'
         : 'Share to Facebook';
 
+  const isGreatScore = result.totalKm < 1000;
+
   return (
     <div className="results-screen fade-in">
-      <h1 className="results-title">MapDrop #{dayNumber}</h1>
+      <div className="results-header-bar">
+        <h1 className="results-title">MapDrop #{dayNumber}</h1>
+        <button className="btn-icon" onClick={() => setShowStats(true)} title="Statistics">
+          📊
+        </button>
+      </div>
 
       <div className="total-distance">
         <span className="total-label">Total Distance</span>
-        <span className="total-value">{formatDistance(result.totalKm)} km</span>
+        <span className={`total-value ${totalRevealed ? 'total-revealed' : ''} ${isGreatScore && totalRevealed ? 'confetti-burst' : ''}`}>
+          {formatDistance(displayedTotal)} km
+        </span>
+        {result.elapsedMs > 0 && (
+          <span className="total-time">⏱ {formatTime(result.elapsedMs)}</span>
+        )}
       </div>
+
+      {streakData.currentStreak >= 2 && (
+        <div className="streak-badge">🔥 {streakData.currentStreak}-day streak</div>
+      )}
 
       <div className="mini-world">
         <ComposableMap
@@ -174,7 +246,11 @@ export default function ResultsScreen({ result, onPlayAgain }) {
         {result.guesses.map((g, i) => {
           const config = continentConfig[g.continent];
           return (
-            <div key={i} className="result-row">
+            <div
+              key={i}
+              className="result-row result-row-reveal"
+              style={{ animationDelay: `${i * ROW_DELAY}ms` }}
+            >
               <div className="result-info">
                 <span className="result-city">{g.city}</span>
                 <span className="result-continent">{config?.name || g.continent}</span>
@@ -190,6 +266,37 @@ export default function ResultsScreen({ result, onPlayAgain }) {
         })}
       </div>
 
+      {/* Challenge comparison */}
+      {challengeScore && (
+        <div className="challenge-comparison">
+          <h3 className="challenge-title">Challenge Result</h3>
+          <div className="challenge-row">
+            <div className="challenge-player">
+              <span className="challenge-label">Challenger</span>
+              <span className="challenge-km">{formatDistance(challengeScore.totalKm)} km</span>
+              {challengeScore.elapsedMs > 0 && (
+                <span className="challenge-time">⏱ {formatTime(challengeScore.elapsedMs)}</span>
+              )}
+            </div>
+            <div className="challenge-vs">VS</div>
+            <div className="challenge-player">
+              <span className="challenge-label">You</span>
+              <span className="challenge-km">{formatDistance(result.totalKm)} km</span>
+              {result.elapsedMs > 0 && (
+                <span className="challenge-time">⏱ {formatTime(result.elapsedMs)}</span>
+              )}
+            </div>
+          </div>
+          <div className="challenge-result">
+            {result.totalKm < challengeScore.totalKm
+              ? '🏆 You win!'
+              : result.totalKm > challengeScore.totalKm
+                ? '😤 Challenger wins!'
+                : '🤝 It\'s a tie!'}
+          </div>
+        </div>
+      )}
+
       <div className="results-actions">
         <button className="btn btn-primary" onClick={handleShare}>
           {copied ? 'Copied!' : 'Share'}
@@ -200,6 +307,9 @@ export default function ResultsScreen({ result, onPlayAgain }) {
           disabled={fbShareStatus !== null}
         >
           {fbButtonLabel}
+        </button>
+        <button className="btn btn-secondary" onClick={handleChallenge}>
+          {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
         </button>
         {onPlayAgain && (
           <button className="btn btn-secondary" onClick={onPlayAgain}>
@@ -212,6 +322,8 @@ export default function ResultsScreen({ result, onPlayAgain }) {
       <div className="share-card-container">
         <ShareCard ref={shareCardRef} result={result} dayNumber={dayNumber} />
       </div>
+
+      {showStats && <StatsModal onClose={() => setShowStats(false)} />}
     </div>
   );
 }

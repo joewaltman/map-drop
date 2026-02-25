@@ -44,6 +44,7 @@ app.post('/api/share', upload.single('image'), (req, res) => {
   const metadata = {
     dayNumber: req.body.dayNumber || '?',
     totalKm: req.body.totalKm || '0',
+    elapsedMs: req.body.elapsedMs || '0',
     breakdown: req.body.breakdown || '',
     createdAt: Date.now(),
   };

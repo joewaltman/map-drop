@@ -2,8 +2,9 @@ import { useState } from 'react';
 import ContinentMap from './ContinentMap';
 import { continentConfig } from '../data/continentMapping';
 import { haversineDistance, distanceToColor, formatDistance } from '../utils/scoring';
+import { playPinDrop, playReveal } from '../utils/sound';
 
-export default function MapRound({ round, roundNumber, totalRounds, onRoundComplete }) {
+export default function MapRound({ round, roundNumber, totalRounds, onRoundComplete, muteButton }) {
   const [guessCoords, setGuessCoords] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [distance, setDistance] = useState(null);
@@ -12,6 +13,15 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
   const continent = continentConfig[round.continent];
   const actualCoords = { lat: round.latitude, lng: round.longitude };
 
+  const getQuality = (km) => {
+    const scale = { europe: 0.4, northAmerica: 0.8, southAmerica: 0.7, africa: 0.85, asia: 1.2 };
+    const s = scale[round.continent] || 1;
+    if (km < 100 * s) return 'green';
+    if (km < 500 * s) return 'yellow';
+    if (km < 1000 * s) return 'orange';
+    return 'red';
+  };
+
   const handleGuess = (coords) => {
     if (revealed) return;
     const km = haversineDistance(coords.lat, coords.lng, round.latitude, round.longitude);
@@ -19,6 +29,8 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
     setDistance(km);
     setRevealed(true);
 
+    playPinDrop();
+    setTimeout(() => playReveal(getQuality(km)), 400);
     setTimeout(() => setShowNext(true), 1500);
   };
 
@@ -39,6 +51,7 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
       <div className="round-header">
         <span className="round-number">Round {roundNumber}/{totalRounds}</span>
         <span className="continent-name">{continent.name}</span>
+        {muteButton}
       </div>
 
       <h2 className="city-prompt">

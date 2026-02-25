@@ -81,3 +81,11 @@ export function distanceToEmoji(km, continent) {
 export function formatDistance(km) {
   return km.toLocaleString('en-US');
 }
+
+// Format milliseconds as "M:SS" (e.g., "1:23" or "0:45")
+export function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}

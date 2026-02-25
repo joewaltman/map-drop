@@ -7,19 +7,42 @@ import { getSavedResult } from './utils/storage';
 import cities from './data/cities.json';
 import './App.css';
 
+function parseChallengeParams() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const challenge = params.get('challenge');
+    if (!challenge) return null;
+    const [dayNumber, totalKm, elapsedMs] = challenge.split('_').map(Number);
+    if (isNaN(totalKm)) return null;
+    return { dayNumber, totalKm, elapsedMs: elapsedMs || 0 };
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
   const [screen, setScreen] = useState('landing');
   const [puzzle, setPuzzle] = useState(null);
   const [result, setResult] = useState(null);
+  const [savedGame, setSavedGame] = useState(false);
+  const [challengeScore, setChallengeScore] = useState(null);
 
-  // TODO: re-enable once-per-day check for production
-  // useEffect(() => {
-  //   const saved = getSavedResult();
-  //   if (saved && saved.completed) {
-  //     setResult(saved);
-  //     setScreen('results');
-  //   }
-  // }, []);
+  // One-per-day enforcement + challenge URL parsing
+  useEffect(() => {
+    const challenge = parseChallengeParams();
+    if (challenge) {
+      setChallengeScore(challenge);
+      // Clear challenge from URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    const saved = getSavedResult();
+    if (saved && saved.completed) {
+      setResult(saved);
+      setSavedGame(true);
+      setScreen('results');
+    }
+  }, []);
 
   const handlePlay = () => {
     const dailyPuzzle = getDailyPuzzle(cities);
@@ -39,7 +62,11 @@ export default function App() {
         <Game puzzle={puzzle} onGameComplete={handleGameComplete} />
       )}
       {screen === 'results' && result && (
-        <ResultsScreen result={result} onPlayAgain={handlePlay} />
+        <ResultsScreen
+          result={result}
+          onPlayAgain={savedGame ? null : handlePlay}
+          challengeScore={challengeScore}
+        />
       )}
     </div>
   );

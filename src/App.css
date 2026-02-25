@@ -57,6 +57,36 @@
   opacity: 0.9;
 }
 
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.btn-icon:hover {
+  background: var(--bg-secondary);
+}
+
+.btn-mute {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.btn-mute:hover {
+  background: var(--bg-secondary);
+}
+
 .share-card-container {
   position: absolute;
   left: -9999px;
@@ -233,6 +263,14 @@
   padding-top: 24px;
 }
 
+.results-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
 .results-title {
   font-size: 32px;
   font-weight: 800;
@@ -256,6 +294,27 @@
 .total-value {
   font-size: 40px;
   font-weight: 800;
+  transition: color 0.3s;
+}
+
+.total-revealed {
+  animation: count-up-fade 0.4s ease-out;
+}
+
+.total-time {
+  font-size: 16px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Streak badge */
+.streak-badge {
+  font-size: 16px;
+  font-weight: 600;
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border-radius: 20px;
+  color: #fbbf24;
 }
 
 .mini-world {
@@ -310,6 +369,310 @@
   flex-direction: column;
   gap: 10px;
   margin-top: 8px;
+}
+
+/* Staggered row-by-row reveal */
+.result-row-reveal {
+  opacity: 0;
+  transform: translateX(30px);
+  animation: slide-in-right 0.4s ease-out forwards;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Count-up total fade */
+@keyframes count-up-fade {
+  0% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Confetti burst for great scores (<1000km) */
+.confetti-burst {
+  position: relative;
+}
+
+.confetti-burst::before,
+.confetti-burst::after {
+  content: '🎉';
+  position: absolute;
+  top: 50%;
+  font-size: 28px;
+  animation: confetti-pop 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+.confetti-burst::before {
+  left: -40px;
+  animation-delay: 0s;
+}
+
+.confetti-burst::after {
+  right: -40px;
+  animation-delay: 0.15s;
+}
+
+@keyframes confetti-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.8);
+  }
+}
+
+/* Challenge comparison */
+.challenge-comparison {
+  width: 100%;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.challenge-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.challenge-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.challenge-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.challenge-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.challenge-km {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.challenge-time {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.challenge-vs {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.challenge-result {
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Stats Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fade-in 0.2s ease-out;
+}
+
+.modal-content {
+  background: var(--bg-primary, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: fade-in 0.2s ease-out;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.modal-close:hover {
+  color: #e2e8f0;
+}
+
+.modal-title {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.modal-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+}
+
+.stat-card-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.stat-card-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Stats streaks */
+.stats-streaks {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.streak-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 24px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  flex: 1;
+}
+
+.streak-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.streak-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Histogram */
+.stats-histogram {
+  margin-top: 8px;
+}
+
+.histogram-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.histogram-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.histogram-label {
+  font-size: 13px;
+  font-weight: 600;
+  width: 50px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.histogram-bar-bg {
+  flex: 1;
+  height: 24px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.histogram-bar {
+  height: 100%;
+  background: var(--pin-guess);
+  border-radius: 6px;
+  min-width: 4px;
+  transition: width 0.6s ease-out;
+}
+
+.histogram-count {
+  font-size: 13px;
+  font-weight: 600;
+  width: 24px;
+  text-align: left;
+  flex-shrink: 0;
 }
 
 /* Animations */
