@@ -1,0 +1,17 @@
+{
+  "name": "DailyPin",
+  "short_name": "DailyPin",
+  "description": "A daily geography guessing game. 5 rounds, 5 continents.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1a2332",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

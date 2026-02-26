@@ -36,12 +36,12 @@ export default function App() {
       window.history.replaceState({}, '', window.location.pathname);
     }
 
-    // const saved = getSavedResult();
-    // if (saved && saved.completed) {
-    //   setResult(saved);
-    //   setSavedGame(true);
-    //   setScreen('results');
-    // }
+    const saved = getSavedResult();
+    if (saved && saved.completed) {
+      setResult(saved);
+      setSavedGame(true);
+      setScreen('results');
+    }
   }, []);
 
   const handlePlay = () => {

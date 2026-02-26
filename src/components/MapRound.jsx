@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ContinentMap from './ContinentMap';
 import { continentConfig } from '../data/continentMapping';
-import { haversineDistance, distanceToColor, formatDistance } from '../utils/scoring';
+import { haversineDistance, distanceToColor, distanceToLabel, formatDistance } from '../utils/scoring';
 import { playPinDrop, playReveal } from '../utils/sound';
 
 export default function MapRound({ round, roundNumber, totalRounds, onRoundComplete, muteButton }) {
@@ -70,6 +70,7 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
         <div className="round-result fade-in">
           <p className="distance-display" style={{ color: distanceToColor(distance, round.continent) }}>
             {formatDistance(distance)} km away
+            <span className="distance-label"> — {distanceToLabel(distance, round.continent)}</span>
           </p>
 
           {showNext && (

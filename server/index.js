@@ -80,11 +80,22 @@ app.post('/api/share', uploadLimiter, upload.single('image'), async (req, res) =
   }
 
   const id = req.file.filename.replace('.png', '');
+
+  // Sanitize and validate metadata
+  const dayNumber = String(req.body.dayNumber || '?').slice(0, 10);
+  const totalKm = Number(req.body.totalKm) || 0;
+  const elapsedMs = Number(req.body.elapsedMs) || 0;
+  const breakdown = String(req.body.breakdown || '').slice(0, 500);
+
+  if (totalKm < 0 || totalKm > 100000 || elapsedMs < 0 || elapsedMs > 3600000) {
+    return res.status(400).json({ error: 'Invalid metadata values' });
+  }
+
   const metadata = {
-    dayNumber: req.body.dayNumber || '?',
-    totalKm: req.body.totalKm || '0',
-    elapsedMs: req.body.elapsedMs || '0',
-    breakdown: req.body.breakdown || '',
+    dayNumber,
+    totalKm: String(totalKm),
+    elapsedMs: String(elapsedMs),
+    breakdown,
     createdAt: Date.now(),
   };
 

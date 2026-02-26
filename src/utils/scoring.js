@@ -68,6 +68,15 @@ export function distanceToColor(km, continent) {
   return red;
 }
 
+// Text label for distance quality, scaled to continent size
+export function distanceToLabel(km, continent) {
+  const t = getThresholds(continent);
+  if (km < t.green) return 'Excellent';
+  if (km < t.yellow) return 'Good';
+  if (km < t.orange) return 'Fair';
+  return 'Far';
+}
+
 // Emoji based on distance, scaled to continent size
 export function distanceToEmoji(km, continent) {
   const t = getThresholds(continent);

@@ -8,7 +8,7 @@ import {
 } from '@vnedyalk0v/react19-simple-maps';
 import topology from 'world-atlas/countries-110m.json';
 import { countryToContinent, continentConfig } from '../data/continentMapping';
-import { distanceToColor, distanceToEmoji, formatDistance, formatTime } from '../utils/scoring';
+import { distanceToColor, distanceToEmoji, distanceToLabel, formatDistance, formatTime } from '../utils/scoring';
 import { getDayNumber } from '../utils/dailySeed';
 import { getStreakData } from '../utils/storage';
 import { playComplete } from '../utils/sound';
@@ -24,8 +24,25 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
   const [displayedTotal, setDisplayedTotal] = useState(0);
   const [totalRevealed, setTotalRevealed] = useState(false);
   const [challengeCopied, setChallengeCopied] = useState(false);
+  const [countdown, setCountdown] = useState('');
   const dayNumber = getDayNumber();
   const streakData = getStreakData();
+
+  // Countdown timer to next puzzle
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      const diff = tomorrow - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setCountdown(`${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Build a lookup: continent key → guess result
   const guessByContinent = {};
@@ -145,9 +162,6 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     <div className="results-screen fade-in">
       <div className="results-header-bar">
         <h1 className="results-title">DailyPin #{dayNumber}</h1>
-        <button className="btn-icon" onClick={() => setShowStats(true)} title="Statistics">
-          📊
-        </button>
       </div>
 
       <div className="total-distance">
@@ -227,12 +241,15 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
                 <span className="result-city">{g.city}</span>
                 <span className="result-continent">{config?.name || g.continent}</span>
               </div>
-              <span
-                className="result-distance"
-                style={{ color: distanceToColor(g.distanceKm, g.continent) }}
-              >
-                {formatDistance(g.distanceKm)} km
-              </span>
+              <div className="result-distance-group">
+                <span
+                  className="result-distance"
+                  style={{ color: distanceToColor(g.distanceKm, g.continent) }}
+                >
+                  {formatDistance(g.distanceKm)} km
+                </span>
+                <span className="result-quality">{distanceToLabel(g.distanceKm, g.continent)}</span>
+              </div>
             </div>
           );
         })}
@@ -279,6 +296,14 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
         <button className="btn btn-secondary" onClick={handleChallenge}>
           {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
         </button>
+        <button className="btn btn-secondary" onClick={() => setShowStats(true)}>
+          View Statistics
+        </button>
+      </div>
+
+      <div className="countdown-timer">
+        <span className="countdown-label">Next puzzle in</span>
+        <span className="countdown-value">{countdown}</span>
       </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}

@@ -14,6 +14,9 @@
     <!-- Theme -->
     <meta name="theme-color" content="#1a2332" />
 
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="DailyPin - Daily Geography Game" />
@@ -40,6 +43,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif;text-align:center;padding:24px;">
+        <div>
+          <h1 style="font-size:32px;margin-bottom:12px;">DailyPin</h1>
+          <p style="color:#94a3b8;font-size:18px;">Please enable JavaScript to play DailyPin.</p>
+        </div>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
