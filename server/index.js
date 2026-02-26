@@ -149,7 +149,7 @@ app.get('/share/:id', (req, res) => {
   <title>${escapeHtml(title)}</title>
   <meta http-equiv="refresh" content="3;url=${baseUrl}">
   <style>
-    body { background: #0f172a; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif;
+    body { background: #1a2332; color: #e2e8f0; font-family: system-ui, -apple-system, sans-serif;
            display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
     .container { text-align: center; }
     h1 { font-size: 32px; margin-bottom: 8px; }

@@ -9,8 +9,8 @@ const MAP_HEIGHT = 500;
 const PADDING = 30;
 
 // Earth-tone color palette
-const OCEAN_FILL = '#1a3a5c';
-const OCEAN_STROKE = '#2a5a8c';
+const OCEAN_FILL = '#1a2332';
+const OCEAN_STROKE = '#2a3a4c';
 const TARGET_FILL = '#8B6914';
 const TARGET_STROKE = '#6b5010';
 const CONTEXT_FILL = '#3d3d3d';

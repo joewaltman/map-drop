@@ -172,7 +172,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
           height={400}
           style={{ width: '100%', height: 'auto' }}
         >
-          <Sphere fill="#1a3a5c" stroke="#2a5a8c" strokeWidth={0.5} />
+          <Sphere fill="#1a2332" stroke="#2a3a4c" strokeWidth={0.5} />
           <Graticule stroke="rgba(255,255,255,0.08)" strokeWidth={0.3} />
           <Geographies geography={topology}>
             {({ geographies }) =>
@@ -189,19 +189,19 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
                     style={{
                       default: {
                         fill: color,
-                        stroke: '#1a3a5c',
+                        stroke: '#1a2332',
                         strokeWidth: 0.5,
                         outline: 'none',
                       },
                       hover: {
                         fill: color,
-                        stroke: '#1a3a5c',
+                        stroke: '#1a2332',
                         strokeWidth: 0.5,
                         outline: 'none',
                       },
                       pressed: {
                         fill: color,
-                        stroke: '#1a3a5c',
+                        stroke: '#1a2332',
                         strokeWidth: 0.5,
                         outline: 'none',
                       },
