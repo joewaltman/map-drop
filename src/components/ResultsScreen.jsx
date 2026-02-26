@@ -270,23 +270,15 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
       )}
 
       <div className="results-actions">
-        <button className="btn btn-primary" onClick={handleShare}>
-          {copied ? 'Copied!' : 'Share'}
-        </button>
         <button className="btn btn-twitter" onClick={handleTwitterShare}>
-          Share to X
+          Share on X
         </button>
         <button className="btn btn-facebook" onClick={handleFacebookShare}>
-          {fbCopied ? 'Copied! Paste into your post' : 'Share to Facebook'}
+          {fbCopied ? 'Copied! Paste into your post' : 'Share on Facebook'}
         </button>
         <button className="btn btn-secondary" onClick={handleChallenge}>
           {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
         </button>
-        {onPlayAgain && (
-          <button className="btn btn-secondary" onClick={onPlayAgain}>
-            Play Again
-          </button>
-        )}
       </div>
 
       {showStats && <StatsModal onClose={() => setShowStats(false)} />}
