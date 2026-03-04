@@ -98,9 +98,10 @@ router.get('/verify', (req, res) => {
   );
 
   // Set httpOnly cookie
+  const isSecure = req.headers['x-forwarded-proto'] === 'https' || req.protocol === 'https';
   res.cookie('dailypin_session', jwtToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isSecure,
     sameSite: 'lax',
     maxAge: COOKIE_MAX_AGE,
     path: '/',
@@ -143,9 +144,9 @@ router.put('/display-name', requireAuth, (req, res) => {
 });
 
 function getBaseUrl(req) {
-  if (process.env.BASE_URL) return process.env.BASE_URL;
+  if (process.env.BASE_URL) return process.env.BASE_URL.replace(/\/+$/, '');
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const host = (req.headers['x-forwarded-host'] || req.headers.host).replace(/\/+$/, '');
   return `${proto}://${host}`;
 }
 

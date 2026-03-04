@@ -34,6 +34,9 @@ mkdirSync(META_DIR, { recursive: true });
 
 const app = express();
 
+// Trust proxy (Railway, Cloudflare, etc.)
+app.set('trust proxy', 1);
+
 // Security headers (allow inline scripts for GA, allow GA and Facebook domains)
 app.use(helmet({
   contentSecurityPolicy: {
@@ -85,9 +88,9 @@ const upload = multer({
 
 // Derive the public base URL from the request if BASE_URL is not explicitly set
 function getBaseUrl(req) {
-  if (process.env.BASE_URL) return process.env.BASE_URL;
+  if (process.env.BASE_URL) return process.env.BASE_URL.replace(/\/+$/, '');
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const host = (req.headers['x-forwarded-host'] || req.headers.host).replace(/\/+$/, '');
   return `${proto}://${host}`;
 }
 
