@@ -70,6 +70,20 @@ export async function submitGuess(gameId, roundIndex, guessLat, guessLng) {
   return res.json();
 }
 
+export async function submitClientResult(result) {
+  const res = await fetch('/api/game/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(result),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || 'Failed to submit result');
+  }
+  return res.json();
+}
+
 export async function fetchLeaderboard(dayNumber) {
   const res = await fetch(`/api/leaderboard/${dayNumber}`);
   if (!res.ok) return { leaderboard: [], totalPlayers: 0 };

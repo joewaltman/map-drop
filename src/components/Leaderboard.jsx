@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchLeaderboard, fetchMyRank } from '../utils/auth';
+import { fetchLeaderboard, fetchMyRank, submitClientResult } from '../utils/auth';
 import { formatDistance, formatTime } from '../utils/scoring';
+import AuthModal from './AuthModal';
 
-export default function Leaderboard({ dayNumber }) {
+export default function Leaderboard({ dayNumber, result }) {
   const { user } = useAuth();
-  const [tab, setTab] = useState('daily');
   const [data, setData] = useState(null);
   const [myRank, setMyRank] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
+  // Auto-submit client-side result when user is authenticated
+  useEffect(() => {
+    if (!user || !result || submitted) return;
+
+    submitClientResult({
+      guesses: result.guesses,
+      totalKm: result.totalKm,
+      elapsedMs: result.elapsedMs || 0,
+    })
+      .then(() => setSubmitted(true))
+      .catch(() => {});
+  }, [user, result, submitted]);
+
+  // Fetch leaderboard data (re-fetch after submission)
   useEffect(() => {
     setLoading(true);
     const promises = [fetchLeaderboard(dayNumber)];
@@ -23,7 +39,7 @@ export default function Leaderboard({ dayNumber }) {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [dayNumber, user]);
+  }, [dayNumber, user, submitted]);
 
   if (loading) {
     return (
@@ -39,7 +55,15 @@ export default function Leaderboard({ dayNumber }) {
       <div className="leaderboard">
         <h3 className="leaderboard-title">Leaderboard</h3>
         <p className="leaderboard-empty">No scores yet. Be the first!</p>
-        {!user && <p className="leaderboard-cta">Sign in to compete on the leaderboard.</p>}
+        {!user && (
+          <div className="leaderboard-sign-in">
+            <p className="leaderboard-cta">Sign in to compete on the leaderboard.</p>
+            <button className="btn btn-primary btn-leaderboard-sign-in" onClick={() => setShowAuthModal(true)}>
+              Sign In
+            </button>
+          </div>
+        )}
+        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       </div>
     );
   }
@@ -71,8 +95,15 @@ export default function Leaderboard({ dayNumber }) {
       )}
 
       {!user && (
-        <p className="leaderboard-cta">Sign in to compete on the leaderboard.</p>
+        <div className="leaderboard-sign-in">
+          <p className="leaderboard-cta">Sign in to compete on the leaderboard.</p>
+          <button className="btn btn-primary btn-leaderboard-sign-in" onClick={() => setShowAuthModal(true)}>
+            Sign In
+          </button>
+        </div>
       )}
+
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 }

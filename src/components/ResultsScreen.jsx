@@ -291,7 +291,7 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
       )}
 
       {/* Leaderboard */}
-      <Leaderboard dayNumber={dayNumber} />
+      <Leaderboard dayNumber={dayNumber} result={result} />
 
       {/* Reminder opt-in for authenticated users */}
       <ReminderOptIn />
