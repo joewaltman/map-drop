@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { getDayNumber } from '../utils/dailySeed';
 import { getStats, getStreakData } from '../utils/storage';
+import { useAuth } from '../contexts/AuthContext';
+import UserMenu from './UserMenu';
 import StatsModal from './StatsModal';
 
 export default function Landing({ onPlay }) {
   const [showStats, setShowStats] = useState(false);
+  const { user } = useAuth();
   const dayNumber = getDayNumber();
   const stats = getStats();
   const isNewPlayer = !stats;
@@ -18,6 +21,11 @@ export default function Landing({ onPlay }) {
 
   return (
     <div className="landing fade-in">
+      <div className="landing-top-bar">
+        <div className="landing-top-spacer" />
+        <UserMenu />
+      </div>
+
       <div className="landing-header">
         <h1 className="landing-title">DailyPin</h1>
         <span className="landing-day">#{dayNumber}</span>

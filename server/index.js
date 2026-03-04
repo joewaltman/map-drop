@@ -1,13 +1,25 @@
+import './env.js';
 import express from 'express';
 import multer from 'multer';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 import { nanoid } from 'nanoid';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+
+// Initialize database (runs schema)
+import './db/index.js';
+
+// Route modules
+import authRoutes from './auth.js';
+import gameRoutes from './game.js';
+import leaderboardRoutes from './leaderboard.js';
+import reminderRoutes, { startReminderCron } from './reminders.js';
+import { optionalAuth } from './middleware/auth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3001;
@@ -39,9 +51,18 @@ app.use(helmet({
 app.use(compression());
 
 // CORS
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
+
+// Parse cookies (needed for auth)
+app.use(cookieParser());
 
 app.use(express.json());
+
+// Optional auth on all routes (sets req.user if valid cookie present)
+app.use(optionalAuth);
 
 // Rate limit for uploads: 10 per 15 minutes per IP
 const uploadLimiter = rateLimit({
@@ -72,6 +93,12 @@ function getBaseUrl(req) {
 
 // Health check
 app.get('/health', (req, res) => res.send('ok'));
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/game', gameRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/reminders', reminderRoutes);
 
 // POST /api/share — accept PNG + metadata, return share URL
 app.post('/api/share', uploadLimiter, upload.single('image'), async (req, res) => {
@@ -247,6 +274,9 @@ function escapeHtml(str) {
 // Run cleanup on startup and every 6 hours
 cleanupOldFiles();
 setInterval(cleanupOldFiles, 6 * 60 * 60 * 1000);
+
+// Start reminder cron job
+startReminderCron();
 
 app.listen(PORT, () => {
   const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;

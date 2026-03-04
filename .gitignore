@@ -25,3 +25,9 @@ dist-ssr
 
 # Server uploads
 server/uploads/
+
+# Server data (SQLite database)
+server/data/
+
+# Environment variables
+.env

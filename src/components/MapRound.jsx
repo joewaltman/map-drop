@@ -3,15 +3,19 @@ import ContinentMap from './ContinentMap';
 import { continentConfig } from '../data/continentMapping';
 import { haversineDistance, distanceToColor, distanceToLabel, formatDistance } from '../utils/scoring';
 import { playPinDrop, playReveal } from '../utils/sound';
+import { submitGuess } from '../utils/auth';
 
-export default function MapRound({ round, roundNumber, totalRounds, onRoundComplete, muteButton }) {
+export default function MapRound({ round, roundNumber, totalRounds, onRoundComplete, muteButton, serverGameId, roundIndex }) {
   const [guessCoords, setGuessCoords] = useState(null);
   const [revealed, setRevealed] = useState(false);
   const [distance, setDistance] = useState(null);
   const [showNext, setShowNext] = useState(false);
+  const [actualCoords, setActualCoords] = useState(
+    // Only set coords if available (client-side flow has them, server flow does not)
+    round.latitude != null ? { lat: round.latitude, lng: round.longitude } : null
+  );
 
   const continent = continentConfig[round.continent];
-  const actualCoords = { lat: round.latitude, lng: round.longitude };
 
   const getQuality = (km) => {
     const scale = { europe: 0.4, northAmerica: 0.8, southAmerica: 0.7, africa: 0.85, asia: 1.2 };
@@ -22,16 +26,42 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
     return 'red';
   };
 
-  const handleGuess = (coords) => {
+  const handleGuess = async (coords) => {
     if (revealed) return;
-    const km = haversineDistance(coords.lat, coords.lng, round.latitude, round.longitude);
-    setGuessCoords(coords);
-    setDistance(km);
-    setRevealed(true);
 
+    setGuessCoords(coords);
     playPinDrop();
-    setTimeout(() => playReveal(getQuality(km)), 400);
-    setTimeout(() => setShowNext(true), 1500);
+
+    if (serverGameId) {
+      // Server-validated flow: send guess to server, get target + distance back
+      try {
+        const result = await submitGuess(serverGameId, roundIndex, coords.lat, coords.lng);
+        const km = result.distanceKm;
+        setDistance(km);
+        setActualCoords({ lat: result.targetLat, lng: result.targetLng });
+        setRevealed(true);
+        setTimeout(() => playReveal(getQuality(km)), 400);
+        setTimeout(() => setShowNext(true), 1500);
+      } catch (err) {
+        console.error('Server guess failed:', err.message);
+        // Fall back to client-side if we have coords
+        if (round.latitude != null) {
+          const km = haversineDistance(coords.lat, coords.lng, round.latitude, round.longitude);
+          setDistance(km);
+          setActualCoords({ lat: round.latitude, lng: round.longitude });
+          setRevealed(true);
+          setTimeout(() => playReveal(getQuality(km)), 400);
+          setTimeout(() => setShowNext(true), 1500);
+        }
+      }
+    } else {
+      // Client-side flow (non-auth users)
+      const km = haversineDistance(coords.lat, coords.lng, round.latitude, round.longitude);
+      setDistance(km);
+      setRevealed(true);
+      setTimeout(() => playReveal(getQuality(km)), 400);
+      setTimeout(() => setShowNext(true), 1500);
+    }
   };
 
   const handleNext = () => {
@@ -40,8 +70,8 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
       city: round.name,
       guessLat: guessCoords.lat,
       guessLng: guessCoords.lng,
-      targetLat: round.latitude,
-      targetLng: round.longitude,
+      targetLat: actualCoords?.lat,
+      targetLng: actualCoords?.lng,
       distanceKm: distance,
     });
   };

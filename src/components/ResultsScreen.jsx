@@ -12,6 +12,9 @@ import { distanceToColor, distanceToEmoji, distanceToLabel, formatDistance, form
 import { getDayNumber } from '../utils/dailySeed';
 import { getStreakData } from '../utils/storage';
 import { playComplete } from '../utils/sound';
+import { useAuth } from '../contexts/AuthContext';
+import Leaderboard from './Leaderboard';
+import ReminderOptIn from './ReminderOptIn';
 import StatsModal from './StatsModal';
 
 const CONTINENT_KEYS = ['northAmerica', 'southAmerica', 'europe', 'africa', 'asia'];
@@ -19,6 +22,7 @@ const ROW_DELAY = 200; // ms between each row reveal
 const COUNT_DURATION = 1000; // ms for count-up animation
 
 export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [displayedTotal, setDisplayedTotal] = useState(0);
@@ -285,6 +289,12 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
           </div>
         </div>
       )}
+
+      {/* Leaderboard */}
+      <Leaderboard dayNumber={dayNumber} />
+
+      {/* Reminder opt-in for authenticated users */}
+      <ReminderOptIn />
 
       <div className="results-actions">
         <button className="btn btn-twitter" onClick={handleTwitterShare}>
