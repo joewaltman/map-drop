@@ -191,6 +191,61 @@ router.post('/submit', requireAuth, (req, res) => {
   res.json({ ok: true, totalKm: serverTotalKm });
 });
 
+// POST /api/game/backfill — submit past results from localStorage after sign-in
+router.post('/backfill', requireAuth, (req, res) => {
+  const { results } = req.body;
+  const userId = req.user.id;
+
+  if (!Array.isArray(results) || results.length === 0 || results.length > 365) {
+    return res.status(400).json({ error: 'Invalid results array' });
+  }
+
+  const currentDay = getDayNumber();
+  let inserted = 0;
+
+  for (const entry of results) {
+    const { dayNumber, guesses, totalKm, elapsedMs } = entry;
+
+    if (!Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > currentDay) continue;
+    if (!Array.isArray(guesses) || guesses.length !== 5) continue;
+    if (typeof totalKm !== 'number' || totalKm < 0 || totalKm > 100000) continue;
+    if (typeof elapsedMs !== 'number' || elapsedMs < 0 || elapsedMs > 3600000) continue;
+
+    // Skip if already has a score for this day
+    const existing = db.prepare(
+      'SELECT id FROM scores WHERE user_id = ? AND day_number = ?'
+    ).get(userId, dayNumber);
+    if (existing) continue;
+
+    // Validate guesses against that day's puzzle
+    const puzzle = getDailyPuzzle(dayNumber);
+    let valid = true;
+    for (let i = 0; i < 5; i++) {
+      const g = guesses[i];
+      const target = puzzle[i];
+      if (!g || g.city !== target.name || g.continent !== target.continent) {
+        valid = false;
+        break;
+      }
+      // Re-compute distance server-side
+      const serverDist = haversineDistance(g.guessLat, g.guessLng, target.latitude, target.longitude);
+      if (Math.abs(serverDist - g.distanceKm) > 2) {
+        guesses[i] = { ...g, distanceKm: serverDist, targetLat: target.latitude, targetLng: target.longitude };
+      }
+    }
+    if (!valid) continue;
+
+    const serverTotalKm = guesses.reduce((sum, g) => sum + g.distanceKm, 0);
+
+    db.prepare(
+      'INSERT OR IGNORE INTO scores (user_id, day_number, total_km, elapsed_ms, guesses) VALUES (?, ?, ?, ?, ?)'
+    ).run(userId, dayNumber, serverTotalKm, elapsedMs || 0, JSON.stringify(guesses));
+    inserted++;
+  }
+
+  res.json({ ok: true, inserted });
+});
+
 // GET /api/game/:gameId/results — get full results after completion
 router.get('/:gameId/results', requireAuth, (req, res) => {
   const { gameId } = req.params;

@@ -43,6 +43,28 @@ export function saveResult(result) {
   }
 }
 
+export function getAllResults() {
+  try {
+    const launch = new Date('2026-02-23T00:00:00');
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return Object.entries(data)
+      .filter(([, v]) => v && v.completed && Array.isArray(v.guesses))
+      .map(([dateKey, v]) => {
+        const d = new Date(dateKey + 'T12:00:00');
+        const dayNumber = Math.floor((d - launch) / 86400000) + 1;
+        return {
+          dayNumber,
+          guesses: v.guesses,
+          totalKm: v.totalKm,
+          elapsedMs: v.elapsedMs || 0,
+        };
+      })
+      .filter((r) => r.dayNumber >= 1);
+  } catch {
+    return [];
+  }
+}
+
 export function getStats() {
   try {
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');

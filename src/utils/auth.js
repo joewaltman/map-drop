@@ -84,6 +84,17 @@ export async function submitClientResult(result) {
   return res.json();
 }
 
+export async function backfillResults(results) {
+  const res = await fetch('/api/game/backfill', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ results }),
+  });
+  if (!res.ok) return { ok: false };
+  return res.json();
+}
+
 export async function fetchLeaderboard(dayNumber) {
   const res = await fetch(`/api/leaderboard/${dayNumber}`);
   if (!res.ok) return { leaderboard: [], totalPlayers: 0 };

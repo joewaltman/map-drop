@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchLeaderboard, fetchAlltimeLeaderboard, fetchMyRank, submitClientResult } from '../utils/auth';
+import { fetchLeaderboard, fetchAlltimeLeaderboard, fetchMyRank, submitClientResult, backfillResults } from '../utils/auth';
 import { formatDistance, formatTime } from '../utils/scoring';
+import { getAllResults } from '../utils/storage';
 import AuthModal from './AuthModal';
 
 export default function Leaderboard({ dayNumber, result }) {
@@ -14,6 +15,7 @@ export default function Leaderboard({ dayNumber, result }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showNameModal, setShowNameModal] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [backfilled, setBackfilled] = useState(false);
 
   // Auto-submit client-side result when user is authenticated
   useEffect(() => {
@@ -27,6 +29,19 @@ export default function Leaderboard({ dayNumber, result }) {
       .then(() => setSubmitted(true))
       .catch(() => {});
   }, [user, result, submitted]);
+
+  // Backfill past localStorage results when user signs in
+  useEffect(() => {
+    if (!user || backfilled) return;
+    const allResults = getAllResults();
+    if (allResults.length <= 1) {
+      setBackfilled(true);
+      return;
+    }
+    backfillResults(allResults)
+      .then(() => setBackfilled(true))
+      .catch(() => setBackfilled(true));
+  }, [user, backfilled]);
 
   // Fetch daily leaderboard data (re-fetch after submission)
   useEffect(() => {
@@ -42,7 +57,7 @@ export default function Leaderboard({ dayNumber, result }) {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [dayNumber, user, submitted]);
+  }, [dayNumber, user, submitted, backfilled]);
 
   // Fetch all-time leaderboard when tab switches or user changes
   useEffect(() => {
@@ -52,7 +67,7 @@ export default function Leaderboard({ dayNumber, result }) {
       .then((res) => setAlltimeData(res))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [tab, user, submitted]);
+  }, [tab, user, submitted, backfilled]);
 
   const handleNameSaved = () => {
     setShowNameModal(false);
