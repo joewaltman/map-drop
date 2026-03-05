@@ -4,6 +4,29 @@ import { requireAuth } from './middleware/auth.js';
 
 const router = Router();
 
+// GET /api/leaderboard/alltime/top — top 50 by average km (min 3 games)
+// Must be defined before /:dayNumber to avoid the wildcard matching "alltime"
+router.get('/alltime/top', (req, res) => {
+  const rows = db.prepare(`
+    SELECT u.display_name, AVG(s.total_km) as avg_km, COUNT(*) as games_played
+    FROM scores s
+    JOIN users u ON u.id = s.user_id
+    GROUP BY s.user_id
+    HAVING games_played >= 3
+    ORDER BY avg_km ASC
+    LIMIT 50
+  `).all();
+
+  const leaderboard = rows.map((row, i) => ({
+    rank: i + 1,
+    displayName: row.display_name,
+    avgKm: Math.round(row.avg_km),
+    gamesPlayed: row.games_played,
+  }));
+
+  res.json({ leaderboard });
+});
+
 // GET /api/leaderboard/:dayNumber — top 50 scores for a day
 router.get('/:dayNumber', (req, res) => {
   const dayNumber = parseInt(req.params.dayNumber, 10);
@@ -66,28 +89,6 @@ router.get('/:dayNumber/me', requireAuth, (req, res) => {
     totalKm: score.total_km,
     elapsedMs: score.elapsed_ms,
   });
-});
-
-// GET /api/leaderboard/alltime — top 50 by average km (min 5 games)
-router.get('/alltime/top', (req, res) => {
-  const rows = db.prepare(`
-    SELECT u.display_name, AVG(s.total_km) as avg_km, COUNT(*) as games_played
-    FROM scores s
-    JOIN users u ON u.id = s.user_id
-    GROUP BY s.user_id
-    HAVING games_played >= 3
-    ORDER BY avg_km ASC
-    LIMIT 50
-  `).all();
-
-  const leaderboard = rows.map((row, i) => ({
-    rank: i + 1,
-    displayName: row.display_name,
-    avgKm: Math.round(row.avg_km),
-    gamesPlayed: row.games_played,
-  }));
-
-  res.json({ leaderboard });
 });
 
 export default router;
