@@ -75,7 +75,7 @@ router.get('/alltime/top', (req, res) => {
     FROM scores s
     JOIN users u ON u.id = s.user_id
     GROUP BY s.user_id
-    HAVING games_played >= 5
+    HAVING games_played >= 3
     ORDER BY avg_km ASC
     LIMIT 50
   `).all();

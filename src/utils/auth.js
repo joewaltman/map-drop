@@ -90,6 +90,12 @@ export async function fetchLeaderboard(dayNumber) {
   return res.json();
 }
 
+export async function fetchAlltimeLeaderboard() {
+  const res = await fetch('/api/leaderboard/alltime/top');
+  if (!res.ok) return { leaderboard: [] };
+  return res.json();
+}
+
 export async function fetchMyRank(dayNumber) {
   const res = await fetch(`/api/leaderboard/${dayNumber}/me`, {
     credentials: 'include',
