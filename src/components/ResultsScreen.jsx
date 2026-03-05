@@ -121,9 +121,20 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
 
   const [fbCopied, setFbCopied] = useState(false);
 
+  // Detect mobile for share behavior
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   const handleFacebookShare = async () => {
     const text = getShareText();
-    // Copy rich text to clipboard so user can paste into the FB post
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        // User cancelled or share failed, fall through to web
+      }
+    }
+    // Desktop or fallback: copy text and open web sharer
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -131,7 +142,6 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     }
     setFbCopied(true);
     setTimeout(() => setFbCopied(false), 4000);
-    // Open Facebook post composer
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`,
       '_blank',
@@ -139,8 +149,17 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     );
   };
 
-  const handleTwitterShare = () => {
+  const handleTwitterShare = async () => {
     const text = getShareText();
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch {
+        // User cancelled or share failed, fall through to web
+      }
+    }
+    // Desktop or fallback: open X intent URL
     window.open(
       `https://x.com/intent/post?text=${encodeURIComponent(text)}`,
       '_blank',
