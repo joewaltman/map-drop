@@ -27,13 +27,13 @@
   {"name": "Winnipeg", "continent": "northAmerica", "latitude": 49.8951, "longitude": -97.1384, "difficulty": "hard"},
   {"name": "Edmonton", "continent": "northAmerica", "latitude": 53.5461, "longitude": -113.4938, "difficulty": "hard"},
   {"name": "Monterrey", "continent": "northAmerica", "latitude": 25.6866, "longitude": -100.3161, "difficulty": "hard"},
-  {"name": "Kingston", "continent": "northAmerica", "latitude": 18.0179, "longitude": -76.8099, "difficulty": "hard"},
+
   {"name": "Tegucigalpa", "continent": "northAmerica", "latitude": 14.0723, "longitude": -87.1921, "difficulty": "hard"},
   {"name": "San Salvador", "continent": "northAmerica", "latitude": 13.6929, "longitude": -89.2182, "difficulty": "hard"},
   {"name": "Managua", "continent": "northAmerica", "latitude": 12.1149, "longitude": -86.2362, "difficulty": "hard"},
   {"name": "Calgary", "continent": "northAmerica", "latitude": 51.0447, "longitude": -114.0719, "difficulty": "hard"},
   {"name": "Nashville", "continent": "northAmerica", "latitude": 36.1627, "longitude": -86.7816, "difficulty": "hard"},
-  {"name": "Portland", "continent": "northAmerica", "latitude": 45.5152, "longitude": -122.6784, "difficulty": "hard"},
+
 
   {"name": "Sao Paulo", "continent": "southAmerica", "latitude": -23.5505, "longitude": -46.6333, "difficulty": "easy"},
   {"name": "Buenos Aires", "continent": "southAmerica", "latitude": -34.6037, "longitude": -58.3816, "difficulty": "easy"},
