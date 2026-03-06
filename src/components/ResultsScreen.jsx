@@ -98,11 +98,13 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     return `🌍 DailyPin #${dayNumber} — ${formatDistance(result.totalKm)} km${timeStr}\n\n${lines.join('\n')}${streakLine}\n${SITE_URL}`;
   };
 
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   const handleShare = async () => {
     const text = getShareText();
     try {
       if (navigator.share) {
-        await navigator.share({ text });
+        await navigator.share({ text, url: SITE_URL });
       } else {
         await navigator.clipboard.writeText(text);
         setCopied(true);
@@ -121,20 +123,8 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
 
   const [fbCopied, setFbCopied] = useState(false);
 
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
   const handleFacebookShare = async () => {
     const text = getShareText();
-    if (isMobile && navigator.share) {
-      // Use native share sheet on mobile — the only way to open the Facebook app
-      try {
-        await navigator.share({ text, url: SITE_URL });
-        return;
-      } catch {
-        // User cancelled or share failed, fall through to web
-      }
-    }
-    // Desktop or fallback: copy text and open web sharer
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -312,18 +302,34 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
       <ReminderOptIn />
 
       <div className="results-actions">
-        <button className="btn btn-twitter" onClick={handleTwitterShare}>
-          Share on X
-        </button>
-        <button className="btn btn-facebook" onClick={handleFacebookShare}>
-          {fbCopied ? 'Copied! Paste into your post' : 'Share on Facebook'}
-        </button>
-        <button className="btn btn-secondary" onClick={handleChallenge}>
-          {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
-        </button>
-        <button className="btn btn-secondary" onClick={() => setShowStats(true)}>
-          View Statistics
-        </button>
+        {isMobile ? (
+          <>
+            <button className="btn btn-primary" onClick={handleShare}>
+              {copied ? 'Shared!' : 'Share'}
+            </button>
+            <button className="btn btn-twitter" onClick={handleTwitterShare}>
+              Share on X
+            </button>
+            <button className="btn btn-secondary" onClick={handleChallenge}>
+              {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn btn-twitter" onClick={handleTwitterShare}>
+              Share on X
+            </button>
+            <button className="btn btn-facebook" onClick={handleFacebookShare}>
+              {fbCopied ? 'Copied! Paste into your post' : 'Share on Facebook'}
+            </button>
+            <button className="btn btn-secondary" onClick={handleChallenge}>
+              {challengeCopied ? 'Link Copied!' : 'Challenge a Friend'}
+            </button>
+            <button className="btn btn-secondary" onClick={() => setShowStats(true)}>
+              View Statistics
+            </button>
+          </>
+        )}
       </div>
 
       <div className="countdown-timer">
