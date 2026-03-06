@@ -121,20 +121,10 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
 
   const [fbCopied, setFbCopied] = useState(false);
 
-  // Detect mobile for share behavior
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const handleFacebookShare = async () => {
     const text = getShareText();
-    if (isMobile && navigator.share) {
-      try {
-        await navigator.share({ text });
-        return;
-      } catch {
-        // User cancelled or share failed, fall through to web
-      }
-    }
-    // Desktop or fallback: copy text and open web sharer
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -142,29 +132,33 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     }
     setFbCopied(true);
     setTimeout(() => setFbCopied(false), 4000);
-    window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`,
-      '_blank',
-      'width=600,height=400'
-    );
+    if (isMobile) {
+      // Open without popup features so universal links can trigger the app
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}&quote=${encodeURIComponent(text)}`,
+        '_blank'
+      );
+    } else {
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`,
+        '_blank',
+        'width=600,height=400'
+      );
+    }
   };
 
-  const handleTwitterShare = async () => {
+  const handleTwitterShare = () => {
     const text = getShareText();
-    if (isMobile && navigator.share) {
-      try {
-        await navigator.share({ text });
-        return;
-      } catch {
-        // User cancelled or share failed, fall through to web
-      }
+    if (isMobile) {
+      // Use twitter:// URL scheme to open X app directly
+      window.location.href = `twitter://post?message=${encodeURIComponent(text)}`;
+    } else {
+      window.open(
+        `https://x.com/intent/post?text=${encodeURIComponent(text)}`,
+        '_blank',
+        'width=600,height=400'
+      );
     }
-    // Desktop or fallback: open X intent URL
-    window.open(
-      `https://x.com/intent/post?text=${encodeURIComponent(text)}`,
-      '_blank',
-      'width=600,height=400'
-    );
   };
 
   const handleChallenge = async () => {
