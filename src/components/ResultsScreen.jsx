@@ -125,6 +125,16 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
 
   const handleFacebookShare = async () => {
     const text = getShareText();
+    if (isMobile && navigator.share) {
+      // Use native share sheet on mobile — the only way to open the Facebook app
+      try {
+        await navigator.share({ text, url: SITE_URL });
+        return;
+      } catch {
+        // User cancelled or share failed, fall through to web
+      }
+    }
+    // Desktop or fallback: copy text and open web sharer
     try {
       await navigator.clipboard.writeText(text);
     } catch {
@@ -132,19 +142,11 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
     }
     setFbCopied(true);
     setTimeout(() => setFbCopied(false), 4000);
-    if (isMobile) {
-      // Open without popup features so universal links can trigger the app
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}&quote=${encodeURIComponent(text)}`,
-        '_blank'
-      );
-    } else {
-      window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`,
-        '_blank',
-        'width=600,height=400'
-      );
-    }
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(SITE_URL)}`,
+      '_blank',
+      'width=600,height=400'
+    );
   };
 
   const handleTwitterShare = () => {
