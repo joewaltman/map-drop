@@ -13,7 +13,7 @@ try {
 
 export function getTodayKey() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')}`;
 }
 
 export function getSavedResult() {
@@ -45,13 +45,14 @@ export function saveResult(result) {
 
 export function getAllResults() {
   try {
-    const launch = new Date('2026-02-23T00:00:00');
+    const launch = Date.UTC(2026, 1, 23); // Feb 23, 2026 00:00 UTC
     const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     return Object.entries(data)
       .filter(([, v]) => v && v.completed && Array.isArray(v.guesses))
       .map(([dateKey, v]) => {
-        const d = new Date(dateKey + 'T12:00:00');
-        const dayNumber = Math.floor((d - launch) / 86400000) + 1;
+        const [y, m, d] = dateKey.split('-').map(Number);
+        const dayMS = Date.UTC(y, m - 1, d);
+        const dayNumber = Math.floor((dayMS - launch) / 86400000) + 1;
         return {
           dayNumber,
           guesses: v.guesses,
@@ -91,14 +92,14 @@ export function getStreakData() {
       .map((e) => e.date)
       .sort();
 
-    // Helper: get the date string for a Date object
+    // Helper: get the date string for a Date object (UTC)
     const toKey = (d) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
 
-    // Helper: add days to a date
+    // Helper: add days to a date (UTC)
     const addDays = (dateStr, n) => {
-      const d = new Date(dateStr + 'T12:00:00');
-      d.setDate(d.getDate() + n);
+      const d = new Date(dateStr + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() + n);
       return toKey(d);
     };
 

@@ -5,7 +5,8 @@ import Game from './components/Game';
 import ResultsScreen from './components/ResultsScreen';
 import AuthModal from './components/AuthModal';
 import { getDailyPuzzle } from './utils/dailySeed';
-import { getSavedResult } from './utils/storage';
+import { getSavedResult, saveResult } from './utils/storage';
+import { fetchTodayResult } from './utils/auth';
 import cities from './data/cities.json';
 import './App.css';
 
@@ -31,8 +32,9 @@ function AppContent() {
   const [challengeScore, setChallengeScore] = useState(null);
   const [showDisplayNamePrompt, setShowDisplayNamePrompt] = useState(false);
   const [serverGameId, setServerGameId] = useState(null);
+  const [serverChecked, setServerChecked] = useState(false);
 
-  // One-per-day enforcement + challenge URL parsing + new user detection
+  // Challenge URL parsing + new user detection (runs once)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
 
@@ -50,14 +52,40 @@ function AppContent() {
     if (params.toString()) {
       window.history.replaceState({}, '', window.location.pathname);
     }
+  }, []);
+
+  // One-per-day enforcement: check localStorage first, then server for authenticated users
+  useEffect(() => {
+    if (isLoading) return;
 
     const saved = getSavedResult();
     if (saved && saved.completed) {
       setResult(saved);
       setSavedGame(true);
       setScreen('results');
+      setServerChecked(true);
+      return;
     }
-  }, []);
+
+    if (!user) {
+      setServerChecked(true);
+      return;
+    }
+
+    // Authenticated user with no local result — check server
+    fetchTodayResult()
+      .then((data) => {
+        if (data && data.completed) {
+          const serverResult = { guesses: data.guesses, totalKm: data.totalKm, elapsedMs: data.elapsedMs };
+          saveResult(serverResult);
+          setResult(serverResult);
+          setSavedGame(true);
+          setScreen('results');
+        }
+      })
+      .catch(() => {})
+      .finally(() => setServerChecked(true));
+  }, [isLoading, user]);
 
   const handlePlay = () => {
     const dailyPuzzle = getDailyPuzzle(cities);
@@ -70,7 +98,7 @@ function AppContent() {
     setScreen('results');
   };
 
-  if (isLoading) {
+  if (isLoading || !serverChecked) {
     return <div className="app-container" />;
   }
 

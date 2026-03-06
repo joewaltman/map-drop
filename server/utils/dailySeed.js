@@ -19,11 +19,11 @@ function mulberry32(seed) {
   };
 }
 
-// Days since launch date (2026-02-23)
+// Days since launch date (2026-02-23), using UTC so client and server always agree
 export function getDayNumber() {
-  const launch = new Date('2026-02-23T00:00:00');
+  const launch = Date.UTC(2026, 1, 23); // Feb 23, 2026 00:00 UTC
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   return Math.floor((today - launch) / 86400000) + 1;
 }
 

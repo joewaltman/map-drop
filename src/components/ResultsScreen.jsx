@@ -36,8 +36,8 @@ export default function ResultsScreen({ result, onPlayAgain, challengeScore }) {
   useEffect(() => {
     const tick = () => {
       const now = new Date();
-      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      const diff = tomorrow - now;
+      const tomorrowUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      const diff = tomorrowUTC - now.getTime();
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const s = Math.floor((diff % 60000) / 1000);

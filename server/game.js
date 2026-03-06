@@ -141,6 +141,25 @@ router.post('/:gameId/guess', requireAuth, (req, res) => {
   });
 });
 
+// GET /api/game/today — check if authenticated user has already completed today's puzzle
+router.get('/today', requireAuth, (req, res) => {
+  const dayNumber = getDayNumber();
+  const score = db.prepare(
+    'SELECT total_km, elapsed_ms, guesses FROM scores WHERE user_id = ? AND day_number = ?'
+  ).get(req.user.id, dayNumber);
+
+  if (!score) {
+    return res.json({ completed: false });
+  }
+
+  res.json({
+    completed: true,
+    totalKm: score.total_km,
+    elapsedMs: score.elapsed_ms,
+    guesses: JSON.parse(score.guesses),
+  });
+});
+
 // POST /api/game/submit — submit a client-side result (for users who sign in after playing)
 router.post('/submit', requireAuth, (req, res) => {
   const { guesses, totalKm, elapsedMs } = req.body;

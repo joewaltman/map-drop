@@ -44,6 +44,14 @@ export async function updateDisplayName(displayName) {
   return res.json();
 }
 
+export async function fetchTodayResult() {
+  const res = await fetch('/api/game/today', {
+    credentials: 'include',
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 export async function startServerGame() {
   const res = await fetch('/api/game/start', {
     method: 'POST',

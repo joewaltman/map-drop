@@ -3,7 +3,7 @@ import MapRound from './MapRound';
 import { saveResult } from '../utils/storage';
 import { isMuted, toggleMute } from '../utils/sound';
 import { useAuth } from '../contexts/AuthContext';
-import { startServerGame, submitGuess } from '../utils/auth';
+import { startServerGame, submitGuess, fetchTodayResult } from '../utils/auth';
 
 export default function Game({ puzzle, onGameComplete, serverGameId, setServerGameId }) {
   const { user } = useAuth();
@@ -29,7 +29,19 @@ export default function Game({ puzzle, onGameComplete, serverGameId, setServerGa
         }
       })
       .catch((err) => {
-        // If already completed, or any error, fall back to client-side
+        if (err.message === "Already completed today's puzzle") {
+          // Fetch existing result from server and show results screen
+          fetchTodayResult()
+            .then((data) => {
+              if (data && data.completed) {
+                saveResult({ guesses: data.guesses, totalKm: data.totalKm, elapsedMs: data.elapsedMs });
+                onGameComplete({ guesses: data.guesses, totalKm: data.totalKm, elapsedMs: data.elapsedMs });
+              }
+            })
+            .catch(() => {});
+          return;
+        }
+        // Any other error, fall back to client-side
         console.warn('Server game start failed, using client-side flow:', err.message);
         setServerError(err.message);
       });
