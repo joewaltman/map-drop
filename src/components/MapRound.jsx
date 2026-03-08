@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import ContinentMap from './ContinentMap';
 import { continentConfig } from '../data/continentMapping';
 import { haversineDistance, distanceToColor, distanceToLabel, formatDistance } from '../utils/scoring';
@@ -76,6 +76,36 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
     });
   };
 
+  // Use Visual Viewport API to position the Next button in the visible area when pinch-zoomed
+  const nextBtnRef = useRef(null);
+
+  const updateButtonPosition = useCallback(() => {
+    const btn = nextBtnRef.current;
+    if (!btn) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    // Position the button at the bottom-center of the visual viewport
+    btn.style.position = 'fixed';
+    btn.style.left = `${vv.offsetLeft + vv.width / 2}px`;
+    btn.style.top = `${vv.offsetTop + vv.height - 60}px`;
+    btn.style.transform = 'translateX(-50%)';
+  }, []);
+
+  useEffect(() => {
+    if (!showNext) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    updateButtonPosition();
+    vv.addEventListener('resize', updateButtonPosition);
+    vv.addEventListener('scroll', updateButtonPosition);
+    return () => {
+      vv.removeEventListener('resize', updateButtonPosition);
+      vv.removeEventListener('scroll', updateButtonPosition);
+    };
+  }, [showNext, updateButtonPosition]);
+
   return (
     <div className="map-round">
       <div className="round-header">
@@ -106,7 +136,7 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
       )}
 
       {showNext && (
-        <div className="next-button-float fade-in">
+        <div className="next-button-float fade-in" ref={nextBtnRef}>
           <button className="btn btn-primary" onClick={handleNext}>
             {roundNumber === totalRounds ? 'See Results' : 'Next'}
           </button>
