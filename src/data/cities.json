@@ -74,7 +74,7 @@
   {"name": "Berlin", "continent": "europe", "latitude": 52.52, "longitude": 13.405, "difficulty": "easy"},
   {"name": "Madrid", "continent": "europe", "latitude": 40.4168, "longitude": -3.7038, "difficulty": "easy"},
   {"name": "Rome", "continent": "europe", "latitude": 41.9028, "longitude": 12.4964, "difficulty": "easy"},
-  {"name": "Moscow", "continent": "europe", "latitude": 55.7558, "longitude": 37.6173, "difficulty": "easy"},
+  {"name": "Moscow", "continent": "asia", "latitude": 55.7558, "longitude": 37.6173, "difficulty": "easy"},
   {"name": "Amsterdam", "continent": "europe", "latitude": 52.3676, "longitude": 4.9041, "difficulty": "easy"},
   {"name": "Istanbul", "continent": "asia", "latitude": 41.0082, "longitude": 28.9784, "difficulty": "easy"},
   {"name": "Barcelona", "continent": "europe", "latitude": 41.3874, "longitude": 2.1686, "difficulty": "easy"},
