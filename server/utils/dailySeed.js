@@ -43,7 +43,7 @@ export function getDailyPuzzle(dayNumber) {
 
   const continentKeys = ['northAmerica', 'southAmerica', 'europe', 'africa', 'asia'];
   const shuffledContinents = seededShuffle(continentKeys, rng);
-  const difficulties = seededShuffle(['easy', 'medium', 'medium', 'medium', 'hard'], rng);
+  const difficulties = seededShuffle(['easy', 'medium', 'medium', 'hard', 'hard'], rng);
 
   const puzzle = [];
 
