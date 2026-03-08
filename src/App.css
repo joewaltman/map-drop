@@ -323,6 +323,20 @@
   font-weight: 600;
 }
 
+.next-button-float {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.next-button-float .btn {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  padding: 14px 48px;
+  font-size: 18px;
+}
+
 /* Results Screen */
 .results-screen {
   display: flex;

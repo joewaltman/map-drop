@@ -102,12 +102,14 @@ export default function MapRound({ round, roundNumber, totalRounds, onRoundCompl
             {formatDistance(distance)} km away
             <span className="distance-label"> — {distanceToLabel(distance, round.continent)}</span>
           </p>
+        </div>
+      )}
 
-          {showNext && (
-            <button className="btn btn-primary fade-in" onClick={handleNext}>
-              {roundNumber === totalRounds ? 'See Results' : 'Next'}
-            </button>
-          )}
+      {showNext && (
+        <div className="next-button-float fade-in">
+          <button className="btn btn-primary" onClick={handleNext}>
+            {roundNumber === totalRounds ? 'See Results' : 'Next'}
+          </button>
         </div>
       )}
 
