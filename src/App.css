@@ -1220,3 +1220,50 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Game loading state */
+.game-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+  min-height: 300px;
+}
+
+/* Game error state */
+.game-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+  padding: 32px;
+  min-height: 300px;
+}
+
+.game-error h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.game-error p {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 300px;
+}
+
+.game-error .btn {
+  width: auto;
+  padding: 12px 32px;
+  margin-top: 8px;
+}
